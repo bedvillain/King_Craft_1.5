@@ -32,6 +32,18 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
 .fist{position:absolute;bottom:-22px;font-size:clamp(78px,13vw,144px);filter:drop-shadow(0 10px 6px #0009);transform-origin:50% 100%;transition:transform .15s}
 .fist.left{left:10%;transform:rotate(-25deg)}.fist.right{right:10%;transform:rotate(12deg)}
 .fists.punch .fist.right{animation:punchRight .48s ease-out both}
+.fists.guard-left .fist.left{animation:guardLeft .48s ease-out both}
+.fists.guard-right .fist.right{animation:guardRight .48s ease-out both}
+.fists.guard-up .fist.left{animation:guardUpLeft .55s ease-out both}
+.fists.guard-up .fist.right{animation:guardUpRight .55s ease-out both}
+.fists.guard-down .fist.left{animation:guardDownLeft .5s ease-out both}
+.fists.guard-down .fist.right{animation:guardDownRight .5s ease-out both}
+@keyframes guardLeft{35%,65%{transform:translate(-85px,-95px) rotate(-55deg) scale(1.4)}}
+@keyframes guardRight{35%,65%{transform:translate(85px,-95px) rotate(55deg) scale(1.4)}}
+@keyframes guardUpLeft{35%,65%{transform:translate(65px,-195px) rotate(25deg) scale(1.5)}}
+@keyframes guardUpRight{35%,65%{transform:translate(-65px,-195px) rotate(-25deg) scale(1.5)}}
+@keyframes guardDownLeft{35%,65%{transform:translate(50px,-20px) rotate(75deg) scale(1.25)}}
+@keyframes guardDownRight{35%,65%{transform:translate(-50px,-20px) rotate(-75deg) scale(1.25)}}
 @keyframes punchRight{0%{transform:rotate(12deg) translate(0,0) scale(1)}33%{transform:rotate(3deg) translate(-42px,-115px) scale(1.7)}62%{transform:rotate(0) translate(-62px,-165px) scale(2.1)}100%{transform:rotate(12deg) translate(0,0) scale(1)}}
 .impact{position:absolute;z-index:7;top:45%;left:50%;transform:translate(-50%,-50%);font-size:80px;pointer-events:none;opacity:0}
 .impact.burst{animation:impactBurst .4s ease-out both}@keyframes impactBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
@@ -91,7 +103,7 @@ const state={phase:"intro",token:0,stage:0,hp:5,enemyHp:3,enemyMax:3,attacks:0,s
 let scheduled=[],clock=null,unlockCounter=null,expressionTimer=null;
 const wait=(fn,ms)=>{const id=setTimeout(fn,ms);scheduled.push(id);return id};
 function cancelAll(){scheduled.forEach(clearTimeout);scheduled=[];clearInterval(clock);clock=null}
-function invalidate(){state.token++;state.windowId++;cancelAll();clearTimeout(expressionTimer);expressionTimer=null;setExpression("angry");$("enemy").classList.remove("punchRush");$("fists").classList.remove("punch");$("impact").classList.remove("burst");clearWarnings();$("bubble").classList.add("hidden");$("stepText").textContent="";$("arena").classList.remove("dodgeLeft","dodgeRight");state.lock=false}
+function invalidate(){state.token++;state.windowId++;cancelAll();clearTimeout(expressionTimer);expressionTimer=null;setExpression("angry");$("enemy").classList.remove("punchRush");$("fists").classList.remove("punch","guard-left","guard-right","guard-up","guard-down");$("impact").classList.remove("burst");clearWarnings();$("bubble").classList.add("hidden");$("stepText").textContent="";$("arena").classList.remove("dodgeLeft","dodgeRight");state.lock=false}
 function displayTime(t){let x=Math.floor(t/100),s=Math.floor(x/10);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")+"."+x%10}
 function totalTime(){return state.elapsed+(state.phase!=="intro"&&state.phase!=="guide"&&state.phase!=="result"&&state.phase!=="dead"?performance.now()-state.started:0)}
 function best(){try{return localStorage.getItem("breakup-best")}catch(e){return null}}
@@ -114,13 +126,19 @@ $("stepText").textContent=isDodge?"회피! "+(state.expected==="dodgeLeft"?"A �
 if(!isDodge)warning(state.expected);else { $("bubbleTitle").textContent="DODGE NOW";$("bubbleSeq").textContent=state.expected==="dodgeLeft"?"A":"D";$("bubble").classList.remove("hidden")}
 feedback("반응해!", "#ffdf76");openWindow(1050-state.stage*140,t)}
 else {const len=state.stage===0?2:state.stage===1?3:4;state.sequence=Array.from({length:len},()=>rand([...dirs,"dodgeLeft","dodgeRight"]));state.idx=0;state.lock=true;$("bubbleTitle").textContent="MEMORIZE THE COMBO";$("bubbleSeq").textContent=state.sequence.map(d=>arrows[d]|| (d==="dodgeLeft"?"A":"D")).join(" ");$("bubble").classList.remove("hidden");$("stepText").textContent="패턴을 기억하세요";feedback("몬스터의 말풍선을 외워!", "#6cffe1");
-wait(()=>{if(t!==state.token)return;$("bubble").classList.add("hidden");state.lock=false;stepCombo(t)},3000)}
+wait(()=>{if(t!==state.token)return;$("bubble").classList.add("hidden");state.lock=false;stepCombo(t)},2000)}
 }
 function openWindow(ms,t){state.lock=false;const w=++state.windowId;state.deadline=performance.now()+ms;wait(()=>{if(t!==state.token||w!==state.windowId||state.phase!=="playing"||state.lock)return;failure()},ms)}
 function stepCombo(t){if(t!==state.token||state.phase!=="playing")return;state.expected=state.sequence[state.idx];$("stepText").textContent="COMBO · STEP "+(state.idx+1)+" / "+state.sequence.length;feedback("기억한 키를 눌러!", "#ffdf76");openWindow(1300-state.stage*150,t)}
+function animateGuard(direction){
+const fists=$("fists");const cls="guard-"+direction;
+fists.classList.remove("guard-left","guard-right","guard-up","guard-down");
+void fists.offsetWidth;fists.classList.add(cls);
+wait(()=>fists.classList.remove(cls),570);
+}
 function response(key){if(state.phase!=="playing"||state.lock||!state.expected)return;const actual=keys[key]||(key===" "?"attack":null);if(!actual)return;
 if(actual!==state.expected){failure();return}
-state.lock=true;state.windowId++;state.attacks++;state.success++;state.expected=null;clearWarnings();$("bubble").classList.add("hidden");
+state.lock=true;state.windowId++;state.attacks++;state.success++;if(dirs.includes(actual))animateGuard(actual);state.expected=null;clearWarnings();$("bubble").classList.add("hidden");
 if(actual.startsWith("dodge")){$("arena").classList.add(actual==="dodgeLeft"?"dodgeLeft":"dodgeRight");wait(()=>$("arena").classList.remove("dodgeLeft","dodgeRight"),210)}
 feedback("PERFECT!", "#6cffe1");
 if(state.type==="combo"&&state.idx<state.sequence.length-1){state.idx++;const t=state.token;wait(()=>stepCombo(t),300)}
