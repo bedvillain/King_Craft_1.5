@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BREAK UP! — 민첩한 하루 되세요</title>
+<style>
+:root{color-scheme:dark;--bg:#080d19;--cyan:#6cffe1;--red:#ff4266;--gold:#ffdf76}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f4f7ff;font-family:system-ui,"Malgun Gothic",sans-serif;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,#153048 0%,#080d19 65%);z-index:-2}
+button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--cyan);outline-offset:4px}
+.app{max-width:1100px;min-height:100vh;margin:auto;padding:20px 22px 32px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{font-weight:1000;font-size:clamp(25px,5vw,44px);letter-spacing:-2px;font-style:italic}.brand span{color:var(--red)}
+.tag{border:1px solid #3f566a;border-radius:40px;padding:8px 14px;font-size:12px;color:#a6cbd6;letter-spacing:2px}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px;margin:16px 0}
+.stat{font-size:12px;color:#9daec8;letter-spacing:1px}.stat:last-child{text-align:right}
+.meter{height:13px;background:#263047;border-radius:20px;overflow:hidden;margin:7px 0}.fill{height:100%;width:100%;background:linear-gradient(90deg,#ff4969,#ffc086);transition:width .2s}.playerfill{background:linear-gradient(90deg,#42acfd,#75ffe0)}
+.timer{text-align:center;font-weight:900;font-size:clamp(24px,4vw,38px);font-variant-numeric:tabular-nums;color:var(--gold)}
+.arena{position:relative;height:clamp(365px,55vw,555px);border:1px solid #37516e;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at center 70%,#172944 0%,#0b1427 60%,#070b16 100%);isolation:isolate}
+.arena:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 55px,#ffffff07 56px),repeating-linear-gradient(90deg,transparent 0 55px,#ffffff07 56px);transform:perspective(400px) rotateX(57deg) translateY(190px) scale(2);pointer-events:none}
+.arena:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,#0002 4px);pointer-events:none;z-index:7}
+.corner{position:absolute;color:#7892b1;font-size:12px;z-index:4;left:20px;top:15px}
+.enemyWrap{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);width:220px;height:240px;display:grid;place-items:center;transition:transform .15s;z-index:2;filter:drop-shadow(0 13px 42px #fe406044)}
+.enemy{width:175px;height:188px;background:linear-gradient(145deg,#6c7aa1,#242f54 55%,#101a36);border:4px solid #97a6cd;clip-path:polygon(23% 0,77% 0,100% 22%,100% 80%,75% 100%,25% 100%,0 80%,0 22%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;box-shadow:inset 0 0 55px #0008;animation:float 2.3s ease-in-out infinite}
+.eyes{display:flex;gap:23px}.eye{width:35px;height:20px;background:#ff4969;box-shadow:0 0 17px #ff4969;transform:skew(-12deg)}
+.mouth{width:62px;height:14px;background:#0b1024;border:2px solid #8591af;box-shadow:0 0 12px #f25b88 inset}
+.enemyWrap.hit{animation:enemyhit .3s linear}
+.enemyWrap.punchRush{animation:bossRush .5s cubic-bezier(.15,.75,.1,1) both}
+@keyframes bossRush{0%{transform:translate(-50%,-50%) scale(1)}35%{transform:translate(-50%,-50%) scale(1.8)}65%{transform:translate(-50%,-50%) scale(2.1)}100%{transform:translate(-50%,-50%) scale(1)}}
+.enemyEmoji{font-size:clamp(110px,18vw,176px);line-height:1;filter:drop-shadow(0 15px 18px #0009);user-select:none}
+.fists{position:absolute;z-index:6;inset:auto 0 0;pointer-events:none;height:42%}
+.fist{position:absolute;bottom:-22px;font-size:clamp(78px,13vw,144px);filter:drop-shadow(0 10px 6px #0009);transform-origin:50% 100%;transition:transform .15s}
+.fist.left{left:10%;transform:rotate(-25deg)}.fist.right{right:10%;transform:rotate(12deg)}
+.fists.punch .fist.right{animation:punchRight .48s ease-out both}
+@keyframes punchRight{0%{transform:rotate(12deg) translate(0,0) scale(1)}33%{transform:rotate(3deg) translate(-42px,-115px) scale(1.7)}62%{transform:rotate(0) translate(-62px,-165px) scale(2.1)}100%{transform:rotate(12deg) translate(0,0) scale(1)}}
+.impact{position:absolute;z-index:7;top:45%;left:50%;transform:translate(-50%,-50%);font-size:80px;pointer-events:none;opacity:0}
+.impact.burst{animation:impactBurst .4s ease-out both}@keyframes impactBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
+@media(prefers-reduced-motion:reduce){.enemyWrap.punchRush,.fists.punch .fist.right,.impact.burst{animation:none}}
+.enemyWrap.strike{transform:translate(-50%,-50%) scale(1.4)}
+.nameplate{position:absolute;bottom:-20px;font-weight:900;color:#c6d5eb;letter-spacing:4px;font-size:12px;white-space:nowrap}
+@keyframes float{50%{transform:translateY(-12px)}}@keyframes enemyhit{50%{filter:brightness(3);transform:translate(-50%,-50%) scale(.9) rotate(-6deg)}}
+.bubble{position:absolute;z-index:5;left:50%;top:17%;transform:translateX(-50%);border:2px solid var(--cyan);border-radius:18px;background:#12273ef5;box-shadow:0 0 30px #21ffd334;padding:15px 20px;min-width:220px;max-width:92%;text-align:center;font-weight:850}
+.bubble:after{content:"";position:absolute;left:50%;bottom:-11px;width:18px;height:18px;background:#12273e;border-right:2px solid var(--cyan);border-bottom:2px solid var(--cyan);transform:rotate(45deg)}
+.bubble small{display:block;color:#91aecc;font-weight:500;margin-bottom:8px}.bubbleseq{font-size:clamp(22px,4vw,36px);letter-spacing:8px;color:var(--gold);white-space:nowrap}
+.warning{position:absolute;z-index:4;background:#ff2e50;opacity:0;box-shadow:0 0 32px #ff1a52,0 0 60px #ff1a5277;border-radius:16px;pointer-events:none}
+.warning.active{animation:alert .23s steps(2,start) infinite}
+@keyframes alert{50%{opacity:.92}}
+.warning.up{top:4px;left:30%;width:40%;height:15px}.warning.down{bottom:4px;left:30%;width:40%;height:15px}.warning.left{left:4px;top:30%;height:40%;width:15px}.warning.right{right:4px;top:30%;height:40%;width:15px}
+#focus{position:absolute;top:62%;left:50%;transform:translate(-50%,-50%);z-index:5;font-size:30px;font-weight:1000;color:var(--cyan);text-shadow:0 0 20px #0ff;pointer-events:none}
+#feedback{position:absolute;bottom:33px;left:20px;right:20px;z-index:5;text-align:center;font-size:clamp(17px,3vw,25px);font-weight:900;text-shadow:0 2px 10px #000}
+#stepText{position:absolute;left:50%;top:15%;transform:translateX(-50%);z-index:4;font-weight:900;font-size:19px;color:#e7eaf5;text-align:center;white-space:nowrap}
+.flash{position:absolute;inset:0;background:#fa2b52;z-index:6;pointer-events:none;opacity:0}.flash.show{animation:damage .38s ease-out}@keyframes damage{from{opacity:.45}to{opacity:0}}
+.arena.dodgeLeft .enemyWrap{transform:translate(-25%,-50%)}.arena.dodgeRight .enemyWrap{transform:translate(-75%,-50%)}
+.panel{background:#111b2c;border:1px solid #30435a;border-radius:14px;padding:16px;margin-top:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.controls{color:#cad3e4;font-size:13px;line-height:1.8}.key{display:inline-block;border:1px solid #60708b;border-bottom-width:3px;padding:0 7px;border-radius:5px;background:#243048;color:white;font-weight:700}
+.action{background:var(--cyan);color:#061a22;border:0;border-radius:10px;padding:12px 20px;font-weight:900}.action.secondary{background:#263852;color:#e5f5fa;border:1px solid #476078}
+.overlay{position:absolute;inset:0;z-index:10;background:#080e1fe9;display:grid;place-items:center;padding:18px;text-align:center;overflow-y:auto}
+.modal{max-width:620px;width:100%}.modal h1{font-size:clamp(37px,7vw,73px);font-style:italic;letter-spacing:-3px;line-height:1;margin:12px 0}.modal h1 span{color:var(--red)}
+.modal p{line-height:1.75;color:#bbccdf}.modal .action{margin:9px}
+.rulegrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;text-align:left;margin:20px 0}.rule{border:1px solid #38506d;background:#17263e;border-radius:9px;padding:12px;font-size:13px;line-height:1.5}
+.hidden{display:none!important}.best{color:var(--gold)}.status{font-size:12px;letter-spacing:1px;color:#a7bfd3;text-align:center;margin-top:12px}
+@media(max-width:620px){.app{padding:12px}.hud{gap:10px}.arena{height:440px}.enemyWrap{transform:translate(-50%,-50%) scale(.8)}.rulegrid{grid-template-columns:1fr}.panel{display:block}.panel button{margin-top:10px}.bubble{top:19%}.corner{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.enemy,.warning.active{animation:none}.warning.active{opacity:.85}}
+</style>
+<style>.enemyEmoji{font-size:0!important;display:block;width:160px;height:160px;background-image:url("data:image/webp;base64,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");background-size:480px 160px;background-position:0 0;background-repeat:no-repeat;image-rendering:auto}.enemyEmoji.face-tease{background-position:-160px 0}.enemyEmoji.face-surprise{background-position:-320px 0}</style></head>
+<body>
+<div class="app">
+<header class="top"><div class="brand">BREAK <span>UP!</span></div><div class="tag">AGILITY / REACTION / MEMORY</div></header>
+<div class="hud">
+<div class="stat">PLAYER HP <span id="playerLabel">♥ ♥ ♥ ♥ ♥</span><div class="meter"><div class="fill playerfill" id="playerBar"></div></div>STAGE <span id="stageLabel">1 / 3</span></div>
+<div class="timer" id="timer">00:00.0</div>
+<div class="stat">ENEMY HP <span id="enemyLabel">3 / 3</span><div class="meter"><div class="fill" id="enemyBar"></div></div><span id="modeLabel">READY</span></div>
+</div>
+<main class="arena" id="arena" aria-label="전투 화면">
+<div class="corner">TARGET LOCK // BREAK THE CORE</div>
+<div class="warning up" id="warnUp"></div><div class="warning down" id="warnDown"></div><div class="warning left" id="warnLeft"></div><div class="warning right" id="warnRight"></div>
+<div id="stepText"></div><div class="bubble hidden" id="bubble"><small id="bubbleTitle"></small><div class="bubbleseq" id="bubbleSeq"></div></div>
+<div class="enemyWrap" id="enemy"><div class="enemyEmoji" id="enemyEmoji" role="img" aria-label="화난 몬스터">😡</div><div class="nameplate" id="enemyName">CORE-01</div></div><div class="fists" id="fists" aria-hidden="true"><span class="fist left">🤜</span><span class="fist right">🤛</span></div><div class="impact" id="impact" aria-hidden="true">💥</div>
+<div id="focus">+</div><div id="feedback" aria-live="polite">준비되면 시작!</div><div class="flash" id="flash"></div>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+</main>
+<div class="panel"><div class="controls"><span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> 방향 방어 &nbsp; <span class="key">A</span> / <span class="key">D</span> 좌우 회피 &nbsp; <span class="key">SPACE</span> 빈틈 공격<br>빨간등 = 단발 공격 방향 / 몬스터 말풍선 = 외워야 할 연속 패턴</div><div><button class="action secondary" id="guideBtn">가이드북</button> <button class="action secondary" id="restartBtn">처음부터</button></div></div>
+<div class="status">최고 기록: <span id="bestText">아직 없음</span> · 파일 하나로 동작하는 해커톤 게임</div>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const dirs=["up","down","left","right"], arrows={up:"↑",down:"↓",left:"←",right:"→"}, keys={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",a:"dodgeLeft",d:"dodgeRight"};
+const maxHP=[3,5,7], names=["CORE-01","CORE-02","FINAL CORE"];
+const state={phase:"intro",token:0,stage:0,hp:5,enemyHp:3,enemyMax:3,attacks:0,success:0,elapsed:0,started:0,sequence:[],idx:0,expected:null,type:null,lock:false,windowId:0};
+let scheduled=[],clock=null,unlockCounter=null,expressionTimer=null;
+const wait=(fn,ms)=>{const id=setTimeout(fn,ms);scheduled.push(id);return id};
+function cancelAll(){scheduled.forEach(clearTimeout);scheduled=[];clearInterval(clock);clock=null}
+function invalidate(){state.token++;state.windowId++;cancelAll();clearTimeout(expressionTimer);expressionTimer=null;setExpression("angry");$("enemy").classList.remove("punchRush");$("fists").classList.remove("punch");$("impact").classList.remove("burst");clearWarnings();$("bubble").classList.add("hidden");$("stepText").textContent="";$("arena").classList.remove("dodgeLeft","dodgeRight");state.lock=false}
+function displayTime(t){let x=Math.floor(t/100),s=Math.floor(x/10);return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")+"."+x%10}
+function totalTime(){return state.elapsed+(state.phase!=="intro"&&state.phase!=="guide"&&state.phase!=="result"&&state.phase!=="dead"?performance.now()-state.started:0)}
+function best(){try{return localStorage.getItem("breakup-best")}catch(e){return null}}
+function saveBest(n){try{localStorage.setItem("breakup-best",String(n))}catch(e){}}
+function hud(){ $("playerLabel").textContent="♥ ".repeat(state.hp).trim()||"0";$("playerBar").style.width=state.hp/5*100+"%";$("stageLabel").textContent=(state.stage+1)+" / 3";$("enemyLabel").textContent=state.enemyHp+" / "+state.enemyMax;$("enemyBar").style.width=state.enemyHp/state.enemyMax*100+"%";$("modeLabel").textContent=state.type==="combo"?"COMBO PATTERN":state.type==="single"?"SINGLE ATTACK":"READY";$("enemyName").textContent=names[state.stage];$("bestText").textContent=best()?displayTime(+best()):"아직 없음"}
+function setExpression(which,ms=0){const face={angry:"😡",tease:"🤪",surprise:"😳"};const labels={angry:"화난 몬스터",tease:"놀리는 몬스터",surprise:"놀란 몬스터"};$("enemyEmoji").textContent="";$("enemyEmoji").className="enemyEmoji face-"+(which==="tease"?"tease":which==="surprise"?"surprise":"angry");$("enemyEmoji").setAttribute("aria-label",labels[which]||labels.angry);clearTimeout(expressionTimer);if(ms)expressionTimer=setTimeout(()=>setExpression("angry"),ms)}
+function feedback(s,c="white"){$("feedback").textContent=s;$("feedback").style.color=c}
+function showModal(html){$("modal").innerHTML=html;$("overlay").classList.remove("hidden")}
+function closeModal(){$("overlay").classList.add("hidden")}
+const book='<div class="rulegrid"><div class="rule"><b>🔴 단발 공격</b><br>화면 네 변 중 빨간 경고등을 보고 해당 방향키를 누르세요.</div><div class="rule"><b>💬 연속 공격</b><br>보스 말풍선의 방향 순서를 암기하세요. STEP 숫자가 뜨면 순서대로 방향키를 입력하세요.</div><div class="rule"><b>↔ 회피</b><br>말풍선에 A 또는 D가 나오면 해당 키로 회피하세요. 좌우 이동은 방향 방어와 구분됩니다.</div><div class="rule"><b>⚡ 반격</b><br>공격을 전부 막으면 빈틈이 열립니다. SPACE로 적 HP를 1 줄이세요. 제한 시간 내에만 유효합니다.</div></div>';
+function intro(){invalidate();state.phase="intro";$("timer").textContent="00:00.0";hud();feedback("READY TO BREAK?");showModal('<div class="tag">민첩한 하루 되세요</div><h1>BREAK <span>UP!</span></h1><p>빨간 불빛을 막고, 몬스터의 연속 공격을 기억하고, 빈틈을 노려 부숴라.<br>3개의 코어를 가장 빠르게 격파하라!</p>'+book+'<button class="action" id="startGame">게임 시작 ↗</button>');$("startGame").onclick=startGame}
+function startGame(){invalidate();state.stage=0;state.hp=5;state.attacks=0;state.success=0;state.elapsed=0;state.enemyMax=maxHP[0];state.enemyHp=state.enemyMax;state.type=null;state.phase="playing";state.started=performance.now();closeModal();hud();clock=setInterval(()=>$("timer").textContent=displayTime(totalTime()),80);feedback("준비...","#ffdf76");wait(()=>nextAttack(),850)}
+function clearWarnings(){dirs.forEach(d=>$("warn"+d[0].toUpperCase()+d.slice(1)).classList.remove("active"))}
+function warning(d){clearWarnings();$("warn"+d[0].toUpperCase()+d.slice(1)).classList.add("active")}
+function rand(arr){return arr[Math.floor(Math.random()*arr.length)]}
+function nextAttack(){if(state.phase!=="playing")return;state.lock=false;const t=state.token;state.type=(state.attacks<2||Math.random()<.5)?"single":"combo";hud();
+if(state.type==="single"){// single attack may be block or dodge
+const isDodge=Math.random()<.23;state.expected=isDodge?rand(["dodgeLeft","dodgeRight"]):rand(dirs);state.sequence=[state.expected];state.idx=0;
+$("stepText").textContent=isDodge?"회피! "+(state.expected==="dodgeLeft"?"A ←":"D →"):"단발 공격을 막아!";
+if(!isDodge)warning(state.expected);else { $("bubbleTitle").textContent="DODGE NOW";$("bubbleSeq").textContent=state.expected==="dodgeLeft"?"A":"D";$("bubble").classList.remove("hidden")}
+feedback("반응해!", "#ffdf76");openWindow(1050-state.stage*140,t)}
+else {const len=state.stage===0?2:state.stage===1?3:4;state.sequence=Array.from({length:len},()=>rand([...dirs,"dodgeLeft","dodgeRight"]));state.idx=0;state.lock=true;$("bubbleTitle").textContent="MEMORIZE THE COMBO";$("bubbleSeq").textContent=state.sequence.map(d=>arrows[d]|| (d==="dodgeLeft"?"A":"D")).join(" ");$("bubble").classList.remove("hidden");$("stepText").textContent="패턴을 기억하세요";feedback("몬스터의 말풍선을 외워!", "#6cffe1");
+wait(()=>{if(t!==state.token)return;$("bubble").classList.add("hidden");state.lock=false;stepCombo(t)},3000)}
+}
+function openWindow(ms,t){state.lock=false;const w=++state.windowId;state.deadline=performance.now()+ms;wait(()=>{if(t!==state.token||w!==state.windowId||state.phase!=="playing"||state.lock)return;failure()},ms)}
+function stepCombo(t){if(t!==state.token||state.phase!=="playing")return;state.expected=state.sequence[state.idx];$("stepText").textContent="COMBO · STEP "+(state.idx+1)+" / "+state.sequence.length;feedback("기억한 키를 눌러!", "#ffdf76");openWindow(1300-state.stage*150,t)}
+function response(key){if(state.phase!=="playing"||state.lock||!state.expected)return;const actual=keys[key]||(key===" "?"attack":null);if(!actual)return;
+if(actual!==state.expected){failure();return}
+state.lock=true;state.windowId++;state.attacks++;state.success++;state.expected=null;clearWarnings();$("bubble").classList.add("hidden");
+if(actual.startsWith("dodge")){$("arena").classList.add(actual==="dodgeLeft"?"dodgeLeft":"dodgeRight");wait(()=>$("arena").classList.remove("dodgeLeft","dodgeRight"),210)}
+feedback("PERFECT!", "#6cffe1");
+if(state.type==="combo"&&state.idx<state.sequence.length-1){state.idx++;const t=state.token;wait(()=>stepCombo(t),300)}
+else {const t=state.token;state.lock=true;$("stepText").textContent="COUNTER WINDOW";feedback("SPACE! 지금 반격!", "#6cffe1");state.expected="attack";wait(()=>{if(t!==state.token||state.phase!=="playing"||state.expected!=="attack")return;state.expected=null;feedback("반격 기회 종료","#a9bcd1");wait(nextAttack,420)},1300)}
+}
+function failure(){if(state.phase!=="playing")return;invalidate();state.hp--;setExpression("tease",900);state.attacks++;state.type=null;state.expected=null;$("flash").classList.remove("show");void $("flash").offsetWidth;$("flash").classList.add("show");hud();feedback("피격! HP -1","#ff4266");if(state.hp<=0){end(false);return}wait(()=>nextAttack(),850)}
+function counter(){if(state.phase!=="playing"||state.expected!=="attack")return;invalidate();state.expected=null;state.enemyHp--;hud();setExpression("surprise",650);$("enemy").classList.remove("hit","punchRush");$("fists").classList.remove("punch");$("impact").classList.remove("burst");void $("enemy").offsetWidth;$("enemy").classList.add("punchRush");$("fists").classList.add("punch");$("impact").classList.add("burst");wait(()=>{$("enemy").classList.remove("punchRush");$("fists").classList.remove("punch");$("impact").classList.remove("burst")},530);feedback("BREAK! 적 HP -1","#ffdf76");if(state.enemyHp<=0){if(state.stage===2){end(true);return}state.stage++;state.enemyMax=maxHP[state.stage];state.enemyHp=state.enemyMax;hud();feedback("STAGE "+(state.stage+1)+" · 난이도 상승!","#6cffe1");wait(nextAttack,1250)}else wait(nextAttack,650)}
+function end(win){const time=totalTime();invalidate();state.phase=win?"result":"dead";state.elapsed=time;$("timer").textContent=displayTime(time);const old=best();if(win&&(!old||time<+old))saveBest(Math.round(time));hud();const rate=state.attacks?Math.round(100*state.success/state.attacks):0;showModal('<div class="tag">'+(win?"MISSION COMPLETE":"GAME OVER")+'</div><h1>'+(win?'CORE <span>DESTROYED!</span>':'YOU <span>FAILED!</span>')+'</h1><p>클리어 시간 <b class="best">'+displayTime(time)+'</b><br>입력 성공률 '+rate+'% · 남은 HP '+state.hp+'</p><p>'+(win?"세 코어를 모두 파괴했어! 더 빠르게 도전해봐.":"다시 도전해서 패턴을 익혀봐!")+'</p><button class="action" id="playAgain">다시 도전</button><button class="action secondary" id="bookAgain">가이드북</button>');$("playAgain").onclick=startGame;$("bookAgain").onclick=guide}
+function guide(){let was=state.phase;const running=was==="playing";if(running){state.elapsed=totalTime();invalidate();state.phase="guide"}showModal('<div class="tag">FIELD GUIDE / 사용 설명서</div><h1>HOW TO <span>BREAK?</span></h1>'+book+'<p>연속 공격은 방향키(↑↓←→)와 회피(A/D)가 섞여 나와요. 화면에 STEP 번호가 나오면 외운 순서로 입력하세요.</p><button class="action" id="guideClose">'+(running?"처음부터 다시 시작":"닫기")+'</button>');$("guideClose").onclick=()=>{if(running)startGame();else{closeModal();if(was==="intro")intro();else if(was==="dead"||was==="result")intro()}}}
+document.addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();if(e.repeat)return;if(state.phase==="playing"){if(e.key===" "&&state.expected==="attack"){counter();return}response(e.key)}else if(e.key==="Enter"&&state.phase==="intro")startGame()});
+$("guideBtn").onclick=guide;$("restartBtn").onclick=intro;intro();
+</script>
+</body></html>
