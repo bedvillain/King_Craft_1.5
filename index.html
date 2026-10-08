@@ -30,9 +30,9 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
 .enemyEmoji{font-size:clamp(110px,18vw,176px);line-height:1;filter:drop-shadow(0 15px 18px #0009);user-select:none}
 .fists{position:absolute;z-index:6;inset:auto 0 0;pointer-events:none;height:42%}
 .fist{position:absolute;bottom:-22px;font-size:clamp(78px,13vw,144px);filter:drop-shadow(0 10px 6px #0009);transform-origin:50% 100%;transition:transform .15s}
-.fist.left{left:10%;transform:rotate(-25deg)}.fist.right{right:10%;transform:scaleX(-1) rotate(-25deg)}
+.fist.left{left:10%;transform:rotate(-25deg)}.fist.right{right:10%;transform:rotate(12deg)}
 .fists.punch .fist.right{animation:punchRight .48s ease-out both}
-@keyframes punchRight{0%{transform:scaleX(-1) rotate(-25deg) translateY(0) scale(1)}33%{transform:scaleX(-1) rotate(5deg) translate(42px,-115px) scale(1.7)}62%{transform:scaleX(-1) translate(62px,-165px) scale(2.1)}100%{transform:scaleX(-1) rotate(-25deg) translate(0,0) scale(1)}}
+@keyframes punchRight{0%{transform:rotate(12deg) translate(0,0) scale(1)}33%{transform:rotate(3deg) translate(-42px,-115px) scale(1.7)}62%{transform:rotate(0) translate(-62px,-165px) scale(2.1)}100%{transform:rotate(12deg) translate(0,0) scale(1)}}
 .impact{position:absolute;z-index:7;top:45%;left:50%;transform:translate(-50%,-50%);font-size:80px;pointer-events:none;opacity:0}
 .impact.burst{animation:impactBurst .4s ease-out both}@keyframes impactBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
 @media(prefers-reduced-motion:reduce){.enemyWrap.punchRush,.fists.punch .fist.right,.impact.burst{animation:none}}
@@ -75,7 +75,7 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
 <div class="corner">TARGET LOCK // BREAK THE CORE</div>
 <div class="warning up" id="warnUp"></div><div class="warning down" id="warnDown"></div><div class="warning left" id="warnLeft"></div><div class="warning right" id="warnRight"></div>
 <div id="stepText"></div><div class="bubble hidden" id="bubble"><small id="bubbleTitle"></small><div class="bubbleseq" id="bubbleSeq"></div></div>
-<div class="enemyWrap" id="enemy"><div class="enemyEmoji" id="enemyEmoji" role="img" aria-label="화난 몬스터">😡</div><div class="nameplate" id="enemyName">CORE-01</div></div><div class="fists" id="fists" aria-hidden="true"><span class="fist left">👊</span><span class="fist right">👊</span></div><div class="impact" id="impact" aria-hidden="true">💥</div>
+<div class="enemyWrap" id="enemy"><div class="enemyEmoji" id="enemyEmoji" role="img" aria-label="화난 몬스터">😡</div><div class="nameplate" id="enemyName">CORE-01</div></div><div class="fists" id="fists" aria-hidden="true"><span class="fist left">🤜</span><span class="fist right">🤛</span></div><div class="impact" id="impact" aria-hidden="true">💥</div>
 <div id="focus">+</div><div id="feedback" aria-live="polite">준비되면 시작!</div><div class="flash" id="flash"></div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 </main>
@@ -121,12 +121,12 @@ function stepCombo(t){if(t!==state.token||state.phase!=="playing")return;state.e
 function response(key){if(state.phase!=="playing"||state.lock||!state.expected)return;const actual=keys[key]||(key===" "?"attack":null);if(!actual)return;
 if(actual!==state.expected){failure();return}
 state.lock=true;state.windowId++;state.attacks++;state.success++;state.expected=null;clearWarnings();$("bubble").classList.add("hidden");
-if(actual.startsWith("dodge")){setExpression("surprise",720);$("arena").classList.add(actual==="dodgeLeft"?"dodgeLeft":"dodgeRight");wait(()=>$("arena").classList.remove("dodgeLeft","dodgeRight"),210)}
-if(!actual.startsWith("dodge"))setExpression("tease",700);feedback("PERFECT!", "#6cffe1");
+if(actual.startsWith("dodge")){$("arena").classList.add(actual==="dodgeLeft"?"dodgeLeft":"dodgeRight");wait(()=>$("arena").classList.remove("dodgeLeft","dodgeRight"),210)}
+feedback("PERFECT!", "#6cffe1");
 if(state.type==="combo"&&state.idx<state.sequence.length-1){state.idx++;const t=state.token;wait(()=>stepCombo(t),300)}
 else {const t=state.token;state.lock=true;$("stepText").textContent="COUNTER WINDOW";feedback("SPACE! 지금 반격!", "#6cffe1");state.expected="attack";wait(()=>{if(t!==state.token||state.phase!=="playing"||state.expected!=="attack")return;state.expected=null;feedback("반격 기회 종료","#a9bcd1");wait(nextAttack,420)},1300)}
 }
-function failure(){if(state.phase!=="playing")return;invalidate();state.hp--;state.attacks++;state.type=null;state.expected=null;$("flash").classList.remove("show");void $("flash").offsetWidth;$("flash").classList.add("show");hud();feedback("피격! HP -1","#ff4266");if(state.hp<=0){end(false);return}wait(()=>nextAttack(),850)}
+function failure(){if(state.phase!=="playing")return;invalidate();state.hp--;setExpression("tease",900);state.attacks++;state.type=null;state.expected=null;$("flash").classList.remove("show");void $("flash").offsetWidth;$("flash").classList.add("show");hud();feedback("피격! HP -1","#ff4266");if(state.hp<=0){end(false);return}wait(()=>nextAttack(),850)}
 function counter(){if(state.phase!=="playing"||state.expected!=="attack")return;invalidate();state.expected=null;state.enemyHp--;hud();setExpression("surprise",650);$("enemy").classList.remove("hit","punchRush");$("fists").classList.remove("punch");$("impact").classList.remove("burst");void $("enemy").offsetWidth;$("enemy").classList.add("punchRush");$("fists").classList.add("punch");$("impact").classList.add("burst");wait(()=>{$("enemy").classList.remove("punchRush");$("fists").classList.remove("punch");$("impact").classList.remove("burst")},530);feedback("BREAK! 적 HP -1","#ffdf76");if(state.enemyHp<=0){if(state.stage===2){end(true);return}state.stage++;state.enemyMax=maxHP[state.stage];state.enemyHp=state.enemyMax;hud();feedback("STAGE "+(state.stage+1)+" · 난이도 상승!","#6cffe1");wait(nextAttack,1250)}else wait(nextAttack,650)}
 function end(win){const time=totalTime();invalidate();state.phase=win?"result":"dead";state.elapsed=time;$("timer").textContent=displayTime(time);const old=best();if(win&&(!old||time<+old))saveBest(Math.round(time));hud();const rate=state.attacks?Math.round(100*state.success/state.attacks):0;showModal('<div class="tag">'+(win?"MISSION COMPLETE":"GAME OVER")+'</div><h1>'+(win?'CORE <span>DESTROYED!</span>':'YOU <span>FAILED!</span>')+'</h1><p>클리어 시간 <b class="best">'+displayTime(time)+'</b><br>입력 성공률 '+rate+'% · 남은 HP '+state.hp+'</p><p>'+(win?"세 코어를 모두 파괴했어! 더 빠르게 도전해봐.":"다시 도전해서 패턴을 익혀봐!")+'</p><button class="action" id="playAgain">다시 도전</button><button class="action secondary" id="bookAgain">가이드북</button>');$("playAgain").onclick=startGame;$("bookAgain").onclick=guide}
 function guide(){let was=state.phase;const running=was==="playing";if(running){state.elapsed=totalTime();invalidate();state.phase="guide"}showModal('<div class="tag">FIELD GUIDE / 사용 설명서</div><h1>HOW TO <span>BREAK?</span></h1>'+book+'<p>연속 공격은 방향키(↑↓←→)와 회피(A/D)가 섞여 나와요. 화면에 STEP 번호가 나오면 외운 순서로 입력하세요.</p><button class="action" id="guideClose">'+(running?"처음부터 다시 시작":"닫기")+'</button>');$("guideClose").onclick=()=>{if(running)startGame();else{closeModal();if(was==="intro")intro();else if(was==="dead"||was==="result")intro()}}}
