@@ -45,6 +45,9 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
 @keyframes guardDownLeft{35%,65%{transform:translate(50px,-20px) rotate(75deg) scale(1.25)}}
 @keyframes guardDownRight{35%,65%{transform:translate(-50px,-20px) rotate(-75deg) scale(1.25)}}
 @keyframes punchRight{0%{transform:rotate(12deg) translate(0,0) scale(1)}33%{transform:rotate(3deg) translate(-42px,-115px) scale(1.7)}62%{transform:rotate(0) translate(-62px,-165px) scale(2.1)}100%{transform:rotate(12deg) translate(0,0) scale(1)}}
+#guardEffect{position:absolute;z-index:8;left:50%;bottom:27%;transform:translate(-50%,0);white-space:nowrap;color:#6cffe1;font-weight:1000;font-size:clamp(24px,5vw,42px);text-shadow:0 0 20px #6cffe1,0 4px 12px #000;opacity:0;pointer-events:none}
+#guardEffect.show{animation:guardFlash .7s ease-out both}
+@keyframes guardFlash{0%{opacity:0;transform:translate(-50%,25px) scale(.8)}20%,65%{opacity:1;transform:translate(-50%,-5px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-18px) scale(1)}}
 .impact{position:absolute;z-index:7;top:45%;left:50%;transform:translate(-50%,-50%);font-size:80px;pointer-events:none;opacity:0}
 .impact.burst{animation:impactBurst .4s ease-out both}@keyframes impactBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
 @media(prefers-reduced-motion:reduce){.enemyWrap.punchRush,.fists.punch .fist.right,.impact.burst{animation:none}}
@@ -88,7 +91,7 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid var(--
 <div class="warning up" id="warnUp"></div><div class="warning down" id="warnDown"></div><div class="warning left" id="warnLeft"></div><div class="warning right" id="warnRight"></div>
 <div id="stepText"></div><div class="bubble hidden" id="bubble"><small id="bubbleTitle"></small><div class="bubbleseq" id="bubbleSeq"></div></div>
 <div class="enemyWrap" id="enemy"><div class="enemyEmoji" id="enemyEmoji" role="img" aria-label="화난 몬스터">😡</div><div class="nameplate" id="enemyName">CORE-01</div></div><div class="fists" id="fists" aria-hidden="true"><span class="fist left">🤜</span><span class="fist right">🤛</span></div><div class="impact" id="impact" aria-hidden="true">💥</div>
-<div id="focus">+</div><div id="feedback" aria-live="polite">준비되면 시작!</div><div class="flash" id="flash"></div>
+<div id="guardEffect" aria-hidden="true"></div><div id="focus">+</div><div id="feedback" aria-live="polite">준비되면 시작!</div><div class="flash" id="flash"></div>
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 </main>
 <div class="panel"><div class="controls"><span class="key">↑</span><span class="key">↓</span><span class="key">←</span><span class="key">→</span> 방향 방어 &nbsp; <span class="key">A</span> / <span class="key">D</span> 좌우 회피 &nbsp; <span class="key">SPACE</span> 빈틈 공격<br>빨간등 = 단발 공격 방향 / 몬스터 말풍선 = 외워야 할 연속 패턴</div><div><button class="action secondary" id="guideBtn">가이드북</button> <button class="action secondary" id="restartBtn">처음부터</button></div></div>
@@ -131,14 +134,24 @@ wait(()=>{if(t!==state.token)return;$("bubble").classList.add("hidden");state.lo
 function openWindow(ms,t){state.lock=false;const w=++state.windowId;state.deadline=performance.now()+ms;wait(()=>{if(t!==state.token||w!==state.windowId||state.phase!=="playing"||state.lock)return;failure()},ms)}
 function stepCombo(t){if(t!==state.token||state.phase!=="playing")return;state.expected=state.sequence[state.idx];$("stepText").textContent="COMBO · STEP "+(state.idx+1)+" / "+state.sequence.length;feedback("기억한 키를 눌러!", "#ffdf76");openWindow(1300-state.stage*150,t)}
 function animateGuard(direction){
-const fists=$("fists");const cls="guard-"+direction;
-fists.classList.remove("guard-left","guard-right","guard-up","guard-down");
-void fists.offsetWidth;fists.classList.add(cls);
-wait(()=>fists.classList.remove(cls),570);
+  const left=document.querySelector(".fist.left"),right=document.querySelector(".fist.right");
+  const frames={
+    left:[{transform:"translate(0,0) rotate(-12deg) scale(1)"},{transform:"translate(-75px,-140px) rotate(-45deg) scale(1.65)",offset:.25},{transform:"translate(-75px,-140px) rotate(-45deg) scale(1.65)",offset:.72},{transform:"translate(0,0) rotate(-12deg) scale(1)"}],
+    right:[{transform:"translate(0,0) rotate(12deg) scale(1)"},{transform:"translate(75px,-140px) rotate(45deg) scale(1.65)",offset:.25},{transform:"translate(75px,-140px) rotate(45deg) scale(1.65)",offset:.72},{transform:"translate(0,0) rotate(12deg) scale(1)"}],
+    upL:[{transform:"translate(0,0) rotate(-12deg)"},{transform:"translate(80px,-230px) rotate(15deg) scale(1.65)",offset:.25},{transform:"translate(80px,-230px) rotate(15deg) scale(1.65)",offset:.72},{transform:"translate(0,0) rotate(-12deg)"}],
+    upR:[{transform:"translate(0,0) rotate(12deg)"},{transform:"translate(-80px,-230px) rotate(-15deg) scale(1.65)",offset:.25},{transform:"translate(-80px,-230px) rotate(-15deg) scale(1.65)",offset:.72},{transform:"translate(0,0) rotate(12deg)"}],
+    downL:[{transform:"translate(0,0) rotate(-12deg)"},{transform:"translate(90px,-48px) rotate(75deg) scale(1.6)",offset:.25},{transform:"translate(90px,-48px) rotate(75deg) scale(1.6)",offset:.72},{transform:"translate(0,0) rotate(-12deg)"}],
+    downR:[{transform:"translate(0,0) rotate(12deg)"},{transform:"translate(-90px,-48px) rotate(-75deg) scale(1.6)",offset:.25},{transform:"translate(-90px,-48px) rotate(-75deg) scale(1.6)",offset:.72},{transform:"translate(0,0) rotate(12deg)"}]
+  };
+  const motions=direction==="left"?[[left,frames.left]]:direction==="right"?[[right,frames.right]]:direction==="up"?[[left,frames.upL],[right,frames.upR]]:[[left,frames.downL],[right,frames.downR]];
+  for(const [hand,steps] of motions){hand.getAnimations().forEach(a=>a.cancel());hand.animate(steps,{duration:730,easing:"ease-out",iterations:1})}
+  const fx=$("guardEffect");fx.textContent={left:"◀ BLOCK",right:"BLOCK ▶",up:"▲ GUARD",down:"▼ GUARD"}[direction];
+  fx.classList.remove("show");void fx.offsetWidth;fx.classList.add("show");
 }
 function response(key){if(state.phase!=="playing"||state.lock||!state.expected)return;const actual=keys[key]||(key===" "?"attack":null);if(!actual)return;
+if(dirs.includes(actual))animateGuard(actual);
 if(actual!==state.expected){failure();return}
-state.lock=true;state.windowId++;state.attacks++;state.success++;if(dirs.includes(actual))animateGuard(actual);state.expected=null;clearWarnings();$("bubble").classList.add("hidden");
+state.lock=true;state.windowId++;state.attacks++;state.success++;state.expected=null;clearWarnings();$("bubble").classList.add("hidden");
 if(actual.startsWith("dodge")){$("arena").classList.add(actual==="dodgeLeft"?"dodgeLeft":"dodgeRight");wait(()=>$("arena").classList.remove("dodgeLeft","dodgeRight"),210)}
 feedback("PERFECT!", "#6cffe1");
 if(state.type==="combo"&&state.idx<state.sequence.length-1){state.idx++;const t=state.token;wait(()=>stepCombo(t),300)}
